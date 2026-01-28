@@ -48,15 +48,6 @@
         #side-panel.open { right: 0; }
         .panel-close { align-self: flex-end; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; }
         
-        .button-container { display: flex; gap: 10px; margin-top: 10px; width: 100%; }
-        
-        .lastfm-btn { 
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            background: #ba0000; color: white; text-decoration: none; border-radius: 8px; 
-            font-size: 14px; font-weight: bold; min-height: 44px; transition: 0.2s;
-        }
-        .lastfm-btn:hover { background: #e30000; }
-      
         @media screen and (max-width: 768px) {
             #side-panel {
                 right: 0; left: 0; bottom: -100%; top: auto;
@@ -72,11 +63,11 @@
 <body>
 
     <div id="ui-layer">
-        <a href="https://note.com/ready_yucca1038/n/n7ee11797c256?sub_rt=share_pw" target="_blank" class="info-link">
+        <a href="" target="_blank" class="info-link">
             <span class="info-icon">?</span> このアプリについて
         </a>
         <div class="search-container">
-            <input type="text" id="node-search" placeholder="アーティスト検索..." autocomplete="off">
+            <input type="text" id="node-search" placeholder="女優検索..." autocomplete="off">
             <div id="search-results"></div>
         </div>
         <button class="btn" onclick="resetSelection()">全体を表示 / 解除</button>
@@ -85,7 +76,7 @@
     <div id="side-panel">
         <span class="panel-close" onclick="closePanel()">×</span>
         <h2 id="panel-title" style="margin: 0; font-size: 24px;">Artist Name</h2>
-        <div id="play-btn-area"></div>
+
     </div>
 
     <div id="status-log">Initializing...</div>
@@ -123,7 +114,13 @@
                 fullData.nodes.forEach(n => {
                     elements.push({
                         group: 'nodes',
-                        data: { id: String(n.id), label: n.label, color: n.color, size: parseFloat(n.size) * CONFIG.baseNodeSize, spotify_id: n.spotify_id, url_lastfm: n.url_lastfm },
+                        // 【修正後：スッキリ＆安全】
+                        data: { 
+                            id: String(n.id), 
+                            label: n.label, 
+                            color: n.color, 
+                            size: parseFloat(n.size) * CONFIG.baseNodeSize 
+                        },
                         position: { x: parseFloat(n.x), y: -parseFloat(n.y) }
                     });
                 });
@@ -201,13 +198,6 @@
         
         function openPanel(data) {
             document.getElementById('panel-title').innerText = data.label;
-            let html = '<div class="button-container">';
-            if (data.url_lastfm) {
-                html += `<a href="${data.url_lastfm}" target="_blank" class="lastfm-btn">Last.fm 詳細</a>`;
-            }
-            // ここにSpotifyボタンなどを追加可能
-            html += '</div>';
-            document.getElementById('play-btn-area').innerHTML = html;
             sidePanel.classList.add('open');
         }
 
