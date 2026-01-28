@@ -1394,6 +1394,17 @@
     color: #fff;
     border-color: #ff7045;
 }
+/* 女優名リンクのスタイル */
+.gem_label_link {
+    color: #333;
+    text-decoration: none;
+    transition: 0.2s;
+    display: inline-block;
+}
+.gem_label_link:hover {
+    color: #ff7045;
+}
+        
     </style>
 </head>
 <body>
@@ -1511,13 +1522,16 @@
             node.neighborhood().nodes().removeClass('faded');
         }
 
-
 window.openPanel = function(data) {
     const afId = "ntanalisis-990";
     const images = [data.img1, data.img2, data.img3].filter(s => s && s.length > 5);
     const urls = [data.url1, data.url2, data.url3];
 
-    // 1. タグリンクの生成 (最優先)
+    // --- 1. 名前リンク（FANZA検索） ---
+    const actressSearchPath = `https://www.dmm.co.jp/search/=/searchstr=${encodeURIComponent(data.label)}/`;
+    const actressUrl = `https://al.fanza.co.jp/?lurl=${encodeURIComponent(actressSearchPath)}&af_id=${afId}&ch=api`;
+
+    // --- 2. タグリンクの生成 ---
     const tagLinks = data.tags ? data.tags.split(',').map(t => {
         const tagName = t.trim();
         const searchPath = `https://www.dmm.co.jp/search/=/searchstr=${encodeURIComponent(tagName)}/`;
@@ -1525,15 +1539,7 @@ window.openPanel = function(data) {
         return `<a href="${url}" target="_blank" class="gem_tag_link">${tagName}</a>`;
     }).join('') : '';
 
-    // 2. メーカーリンクの生成 (後方に配置)
-    const makerLinks = data.maker ? data.maker.split(',').map(m => {
-        const name = m.trim();
-        const searchPath = `https://www.dmm.co.jp/search/=/searchstr=${encodeURIComponent(name)}/`;
-        const url = `https://al.fanza.co.jp/?lurl=${encodeURIComponent(searchPath)}&af_id=${afId}&ch=api`;
-        return `<a href="${url}" target="_blank" class="gem_maker_link">${name}</a>`;
-    }).join('') : '---';
-
-    // 3. 画像とボタンのHTML
+    // --- 3. 画像・ボタン・サムネイルの生成 ---
     let imgHTML = '';
     if (images.length > 0) {
         imgHTML += `
@@ -1547,18 +1553,27 @@ window.openPanel = function(data) {
             </a>`;
 
         if (images.length > 1) {
-            imgHTML += `<div class="gem_thumb_container">`;
-            images.forEach((s, i) => {
-                imgHTML += `<img src="${s}" class="gem_thumb ${i===0?'active':''}" onclick="changeImg(this, '${s}', '${urls[i]}')">`;
-            });
-            imgHTML += `</div>`;
+            imgHTML += `<div class="gem_thumb_container">` + images.map((s, i) => 
+                `<img src="${s}" class="gem_thumb ${i===0?'active':''}" onclick="changeImg(this, '${s}', '${urls[i]}')">`
+            ).join('') + `</div>`;
         }
     }
 
-    // パネルの組み立て：タグを上に、メーカーを下に
+    // --- 4. メーカーリンクの生成 ---
+    const makerLinks = data.maker ? data.maker.split(',').map(m => {
+        const name = m.trim();
+        const searchPath = `https://www.dmm.co.jp/search/=/searchstr=${encodeURIComponent(name)}/`;
+        const url = `https://al.fanza.co.jp/?lurl=${encodeURIComponent(searchPath)}&af_id=${afId}&ch=api`;
+        return `<a href="${url}" target="_blank" class="gem_maker_link">${name}</a>`;
+    }).join('') : '---';
+
+    // パネルの描画
     sidePanel.innerHTML = `
         <span style="float:right; cursor:pointer; font-size:24px; color:#999;" onclick="closePanel()">×</span>
-        <h2 style="margin:0 0 10px 0; font-size:20px;">${data.label}</h2>
+        
+        <h2 style="margin:0 0 15px 0; font-size:22px;">
+            <a href="${actressUrl}" target="_blank" class="gem_label_link">${data.label}</a>
+        </h2>
         
         <div style="margin-bottom:15px;">
             <p style="font-size:10px; color:#999; margin-bottom:5px; border-bottom:1px solid #eee;">TAGS (属性検索)</p>
@@ -1573,10 +1588,7 @@ window.openPanel = function(data) {
         </div>
     `;
     sidePanel.classList.add('open');
-};
-
-
-        window.changeImg = function(el, src, targetUrl) {
+};        window.changeImg = function(el, src, targetUrl) {
             document.getElementById('main_img').src = src;
             document.getElementById('gem_image_link').href = targetUrl;
             document.getElementById('gem_main_button').href = targetUrl;
