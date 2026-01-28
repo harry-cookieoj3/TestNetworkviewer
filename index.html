@@ -1404,7 +1404,17 @@
 .gem_label_link:hover {
     color: #ff7045;
 }
-        
+/* ×ボタンのスタイル調整 */
+.gem_close_btn {
+    float: right; 
+    cursor: pointer; 
+    font-size: 36px; /* 24pxから拡大 */
+    color: #999; 
+    line-height: 1;
+    padding: 10px; /* タップ範囲を広げる */
+    margin-top: -10px;
+    margin-right: -10px;
+}
     </style>
 </head>
 <body>
@@ -1454,7 +1464,10 @@
                             tags: n.tags, img1: n.img1, img2: n.img2, img3: n.img3,
                             url1: n.url1, url2: n.url2, url3: n.url3, maker: n.maker
                         },
-                        position: { x: parseFloat(n.x) * dataConf.scale, y: parseFloat(n.y) * -dataConf.scale }
+                        position: { 
+                            x: parseFloat(n.x) * dataConf.scale, 
+                            y: parseFloat(n.y) * dataConf.scale // 反転を戻す（マイナスを消す）
+                        }
                     });
                 });
 
@@ -1522,73 +1535,63 @@
             node.neighborhood().nodes().removeClass('faded');
         }
 
-window.openPanel = function(data) {
-    const afId = "ntanalisis-990";
-    const images = [data.img1, data.img2, data.img3].filter(s => s && s.length > 5);
-    const urls = [data.url1, data.url2, data.url3];
+        window.openPanel = function(data) {
+            const afId = "ntanalisis-990";
+            const images = [data.img1, data.img2, data.img3].filter(s => s && s.length > 5);
+            const urls = [data.url1, data.url2, data.url3];
 
-    // --- 1. 名前リンク（FANZA検索） ---
-    const actressSearchPath = `https://www.dmm.co.jp/search/=/searchstr=${encodeURIComponent(data.label)}/`;
-    const actressUrl = `https://al.fanza.co.jp/?lurl=${encodeURIComponent(actressSearchPath)}&af_id=${afId}&ch=api`;
+            const actressUrl = `https://al.fanza.co.jp/?lurl=${encodeURIComponent('https://www.dmm.co.jp/search/=/searchstr=' + data.label + '/')}&af_id=${afId}&ch=api`;
 
-    // --- 2. タグリンクの生成 ---
-    const tagLinks = data.tags ? data.tags.split(',').map(t => {
-        const tagName = t.trim();
-        const searchPath = `https://www.dmm.co.jp/search/=/searchstr=${encodeURIComponent(tagName)}/`;
-        const url = `https://al.fanza.co.jp/?lurl=${encodeURIComponent(searchPath)}&af_id=${afId}&ch=api`;
-        return `<a href="${url}" target="_blank" class="gem_tag_link">${tagName}</a>`;
-    }).join('') : '';
+            const tagLinks = data.tags ? data.tags.split(',').map(t => {
+                const name = t.trim();
+                const url = `https://al.fanza.co.jp/?lurl=${encodeURIComponent('https://www.dmm.co.jp/search/=/searchstr=' + name + '/')}&af_id=${afId}&ch=api`;
+                return `<a href="${url}" target="_blank" class="gem_tag_link">${name}</a>`;
+            }).join('') : '';
 
-    // --- 3. 画像・ボタン・サムネイルの生成 ---
-    let imgHTML = '';
-    if (images.length > 0) {
-        imgHTML += `
-            <div class="gem_img_viewer">
-                <a id="gem_image_link" href="${urls[0]}" target="_blank">
-                    <img id="main_img" src="${images[0]}" class="gem_main_img">
-                </a>
-            </div>
-            <a id="gem_main_button" href="${urls[0]}" target="_blank" class="gem_work_btn btn_url1">
-                作品の詳細をチェック
-            </a>`;
+            const makerLinks = data.maker ? data.maker.split(',').map(m => {
+                const name = m.trim();
+                const url = `https://al.fanza.co.jp/?lurl=${encodeURIComponent('https://www.dmm.co.jp/search/=/searchstr=' + name + '/')}&af_id=${afId}&ch=api`;
+                return `<a href="${url}" target="_blank" class="gem_maker_link">${name}</a>`;
+            }).join('') : '---';
 
-        if (images.length > 1) {
-            imgHTML += `<div class="gem_thumb_container">` + images.map((s, i) => 
-                `<img src="${s}" class="gem_thumb ${i===0?'active':''}" onclick="changeImg(this, '${s}', '${urls[i]}')">`
-            ).join('') + `</div>`;
-        }
-    }
+            let imgHTML = '';
+            if (images.length > 0) {
+                imgHTML += `
+                    <div class="gem_img_viewer">
+                        <a id="gem_image_link" href="${urls[0]}" target="_blank">
+                            <img id="main_img" src="${images[0]}" class="gem_main_img">
+                        </a>
+                    </div>
+                    <a id="gem_main_button" href="${urls[0]}" target="_blank" class="gem_work_btn btn_url1">
+                        作品の詳細をチェック
+                    </a>`;
 
-    // --- 4. メーカーリンクの生成 ---
-    const makerLinks = data.maker ? data.maker.split(',').map(m => {
-        const name = m.trim();
-        const searchPath = `https://www.dmm.co.jp/search/=/searchstr=${encodeURIComponent(name)}/`;
-        const url = `https://al.fanza.co.jp/?lurl=${encodeURIComponent(searchPath)}&af_id=${afId}&ch=api`;
-        return `<a href="${url}" target="_blank" class="gem_maker_link">${name}</a>`;
-    }).join('') : '---';
+                if (images.length > 1) {
+                    imgHTML += `<div class="gem_thumb_container">` + images.map((s, i) => 
+                        `<img src="${s}" class="gem_thumb ${i===0?'active':''}" onclick="changeImg(this, '${s}', '${urls[i]}')">`
+                    ).join('') + `</div>`;
+                }
+            }
 
-    // パネルの描画
-    sidePanel.innerHTML = `
-        <span style="float:right; cursor:pointer; font-size:24px; color:#999;" onclick="closePanel()">×</span>
-        
-        <h2 style="margin:0 0 15px 0; font-size:22px;">
-            <a href="${actressUrl}" target="_blank" class="gem_label_link">${data.label}</a>
-        </h2>
-        
-        <div style="margin-bottom:15px;">
-            <p style="font-size:10px; color:#999; margin-bottom:5px; border-bottom:1px solid #eee;">TAGS (属性検索)</p>
-            <div style="display:flex; flex-wrap:wrap; gap:6px;">${tagLinks}</div>
-        </div>
+            sidePanel.innerHTML = `
+                <span class="gem_close_btn" onclick="closePanel()">×</span>
+                <h2 style="margin:0 0 15px 0; font-size:22px; padding-right:40px;">
+                    <a href="${actressUrl}" target="_blank" class="gem_label_link">${data.label}</a>
+                </h2>
+                <div style="margin-bottom:15px;">
+                    <p style="font-size:10px; color:#999; margin-bottom:5px; border-bottom:1px solid #eee;">TAGS (属性検索)</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:6px;">${tagLinks}</div>
+                </div>
+                ${imgHTML}
+                <div style="margin-top:20px; padding-top:10px; border-top:1px dashed #ddd;">
+                    <p style="font-size:10px; color:#999; margin-bottom:5px;">MAKER (所属/レーベル)</p>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${makerLinks}</div>
+                </div>
+            `;
+            sidePanel.classList.add('open');
+        };
 
-        ${imgHTML}
-
-        <div style="margin-top:20px; padding-top:10px; border-top:1px dashed #ddd;">
-            <p style="font-size:10px; color:#999; margin-bottom:5px;">MAKER (所属/レーベル)</p>
-            <div style="display:flex; flex-wrap:wrap; gap:4px;">${makerLinks}</div>
-        </div>
-    `;
-    sidePanel.classList.add('open');
-};        window.changeImg = function(el, src, targetUrl) {
+        window.changeImg = function(el, src, targetUrl) {
             document.getElementById('main_img').src = src;
             document.getElementById('gem_image_link').href = targetUrl;
             document.getElementById('gem_main_button').href = targetUrl;
@@ -1597,13 +1600,20 @@ window.openPanel = function(data) {
         };
 
         window.closePanel = function() { sidePanel.classList.remove('open'); };
-        window.resetSelection = function() {
-            closePanel();
-            cy.elements().removeClass('faded highlight-node edge-out edge-in');
-            searchInput.value = '';
-            adjustView(true);
-        };
 
+        window.resetSelection = function() {
+            const isFocused = cy.elements('.faded').length > 0;
+            if (isFocused) {
+                cy.elements().removeClass('faded highlight-node edge-out edge-in');
+                addLog("フォーカスを解除しました");
+            } else {
+                closePanel();
+                searchInput.value = '';
+                adjustView(true);
+                addLog("全体表示に戻りました");
+            }
+        };
+        
         window.addEventListener('resize', () => adjustView(true));
         start();
     })();
